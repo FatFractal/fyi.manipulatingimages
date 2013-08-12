@@ -35,7 +35,7 @@ CREATE COLLECTION /Notes OBJECTTYPE Note
 #
 # Event Handlers
 #
-CREATE HANDLER addThumbnail POST ON /Notes Update as javascript:require('scripts/ImagesEventHandlers').addThumbnail();
+CREATE HANDLER addThumbnail PRE ON /Notes Update as javascript:require('scripts/ImagesEventHandlers').addThumbnail();
 #
 # Extension Resources
 #

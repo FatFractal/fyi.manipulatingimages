@@ -1,12 +1,6 @@
 // Imports
 var ff = require('ffef/FatFractal');
-var io = require('io'); // standard CommonJS module
-var fs = require('fs'); // standard CommonJS module
-var bin = require('binary'); // standard CommonJS module
-var hc = require('ringo/httpclient'); // not standardised by CommonJS yet, hence ringo prefix. see http://ringojs.org
 var common = require('scripts/ImagesCommon');
-var Scalr = Packages.org.imgscalr.Scalr; // import the Scalr Java package
-var ImageIO = Packages.javax.imageio.ImageIO; // import the imageIo Java packages
 
 exports.cleanup = function() {
     var notes = ff.getArrayFromUri("/Notes");

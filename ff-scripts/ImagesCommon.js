@@ -55,7 +55,7 @@ exports.resizeImage = function(picBytes, width, height) {
 }
 
 exports.rotateImage = function(picBytes, degrees) {
-    var rotated = null;
+    var rotatedBytes = null;
     /**
      * We need a BufferedImage for the Scalr processing
      * There are ImageIO read methods for InputStream, File and URL. We've got a
@@ -71,7 +71,8 @@ exports.rotateImage = function(picBytes, degrees) {
         /**
          * Rotate the picture
          */
-        if(degrees == 90) 
+       var rotated = null;
+       if(degrees == 90) 
             rotated = Scalr.rotate(img, Scalr.Rotation.CW_90);
         else if(degrees == 180) 
             rotated = Scalr.rotate(img, Scalr.Rotation.CW_180);
@@ -84,13 +85,13 @@ exports.rotateImage = function(picBytes, degrees) {
         /**
          * Get the bytes from the ByteArrayOutputStream
          */
-        rotated = new bin.ByteArray(baos.toByteArray());
+        rotatedBytes = new bin.ByteArray(baos.toByteArray());
     } catch (e) {}
-    return rotated;
+    return rotatedBytes;
 }
 
 exports.flipImage = function(picBytes, direction) {
-    var flipped = null;
+    var flippedBytes = null;
     /**
      * We need a BufferedImage for the Scalr processing
      * There are ImageIO read methods for InputStream, File and URL. We've got a
@@ -106,6 +107,7 @@ exports.flipImage = function(picBytes, direction) {
         /**
          * Rotate the picture
          */
+        var flipped = null;
         if(direction.toLowerCase() == "h") 
             flipped = Scalr.rotate(img, Scalr.Rotation.FLIP_HORZ);
         else if(direction.toLowerCase() == "v") 
@@ -117,8 +119,8 @@ exports.flipImage = function(picBytes, direction) {
         /**
          * Get the bytes from the ByteArrayOutputStream
          */
-        flipped = new bin.ByteArray(baos.toByteArray());
+        flippedBytes = new bin.ByteArray(baos.toByteArray());
     } catch (e) {}
-    return flipped;
+    return flippedBytes;
 }
 
