@@ -15,7 +15,7 @@
   </script>
   <link rel="stylesheet" href="css/app.css"/>
   <link href="lib/ui-bootstrap/assets/bootstrap.css" rel="stylesheet" media="screen">
-  <style>#drop_zone{border:2px dashed #bbb;-moz-border-radius:5px;-webkit-border-radius:5px;border-radius:5px;padding:25px;text-align:center;font: 20pt bold 'Vollkorn';color:#bbb;width:206px;}
+  <style>#drop_zone{border:2px dashed #bbb;-moz-border-radius:5px;-webkit-border-radius:5px;border-radius:5px;padding:25px;text-align:center;font: 20pt bold 'Vollkorn';color:#bbb;width:156px;}
   </style>
 </head>
 <!--
@@ -75,22 +75,7 @@
       </p>
     </div>
     <button id="new-note-button" class="btn" onclick="SaveNote()">Try it!</button>
-    <br>
-    <p id = "note-notes-response"></p>
-  </div>
-  <div class="well">
-    <h2>Get all the objects from the Favs collection</h2>
-    <div class="well">
-       <p>ff.getArrayFromUri("/ff/resources/Favs/", function(r) {<br>
-           &nbsp;&nbsp;&nbsp;&nbsp;// handle success<br>
-           }, function(code,message){<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;// handle error<br>
-            });
-       </p>
-    </div>
-    <button id="get-all-favs-button" class="btn" onclick="getAllFromFavs()">Try it!</button>
-    <br>
-    <p id = "all-favs-response"></p>
+    <div id = "new-note-response"></div>
   </div>
 </div>
 <!--Scripts-->
@@ -101,7 +86,6 @@
 <script src="lib/moment.min.js"></script>
 <script src="lib/spin.min.js"></script>
 <script src="resources/en.js"></script>
-
 -->
 </body>
 <script type="text/javascript">
@@ -128,7 +112,7 @@
   var imageData;
   function SaveNote() {
     ff.login("test_user", "T3st_Us3r", function() {
-      var el = document.getElementById('note-notes-response');
+      var el = document.getElementById('new-note-response');
       var elsi = document.getElementById('subject-input');
       var elni = document.getElementById('note-input');
       var m = new Note();
@@ -136,16 +120,46 @@
       m.note = elni.value;
       m.imageData = imageData;
       ff.createObjAtUri(m, "/Notes", function(resp) {
-        note = new Note(resp);
+        var note = new Note(resp);
         var str = js_beautify(JSON.stringify(note), {
           indent_size: 4,
           indent_char: '&nbsp;',
           linefeed_char: '<br>'
         });
-        el.innerHTML = "<br><div class = 'well blue'>Note was created in the  " +
-          resp.ffRL + " Collection with data: " +
-          str + "</div>";
-        console.log("Note was created: " + JSON.stringify(resp));
+        var img = document.createElement("img");
+        el.innerHTML = "<div class = 'well blue' style = 'margin-top:25px;'><p>Note was created in the  " +
+          resp.ffRL + " Collection with data: " + str + "</p></div>";
+        var img = document.createElement("img");
+        el.appendChild(img);
+		img.src = arrayBufferToDataUri(note.imageData);
+		function arrayBufferToDataUri(arrayBuffer) {
+          var base64 = '',
+            encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
+            bytes = new Uint8Array(arrayBuffer), byteLength = bytes.byteLength,
+            byteRemainder = byteLength % 3, mainLength = byteLength - byteRemainder,
+            a, b, c, d, chunk;
+          for (var i = 0; i < mainLength; i = i + 3) {
+            chunk = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2];
+            a = (chunk & 16515072) >> 18; b = (chunk & 258048) >> 12;
+            c = (chunk & 4032) >> 6; d = chunk & 63;
+            base64 += encodings[a] + encodings[b] + encodings[c] + encodings[d];
+          }
+          if (byteRemainder == 1) {
+            chunk = bytes[mainLength];
+            a = (chunk & 252) >> 2;
+            b = (chunk & 3) << 4;
+            base64 += encodings[a] + encodings[b] + '==';
+          } else if (byteRemainder == 2) {
+            chunk = (bytes[mainLength] << 8) | bytes[mainLength + 1];
+            a = (chunk & 16128) >> 8;
+            b = (chunk & 1008) >> 4;
+            c = (chunk & 15) << 2;
+            base64 += encodings[a] + encodings[b] + encodings[c] + '=';
+          }
+          return "data:image/jpeg;base64," + base64;
+	    }
+        //var imageDataContext = elid.getContext('2d');
+		//imageDataContext.drawImage(note.imageData, 0, 0)
       }, function(code, msg) {
         console.error("saveNote() createObjAtUri Error: " + code + " " + msg);
         el.innerHTML = "<br><div class = 'well red'>Got an error: " + msg + "</div>";
