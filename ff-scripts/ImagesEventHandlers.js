@@ -14,7 +14,7 @@ exports.addThumbnail = function() {
     if (thumbnailImage === undefined || thumbnailImage === null ) {
         print("got here");
         thumbnailImage = common.resizeImage(originalImage, 50, 50);
-        ff.saveBlob(note, 'thumbnail', thumbnailImage, 'image/jpeg');
+        ff.saveBlob(note, 'thumbnail', thumbnailImage, 'image/png');
         //note.thumbnail = thumbnailImage;
         //ff.updateObj(note);
     }

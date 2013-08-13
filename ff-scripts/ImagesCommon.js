@@ -21,7 +21,7 @@ exports.cropImage = function(picBytes, width, height) {
          */
         var cropped = Scalr.crop(img, width, height);
         var baos    = new java.io.ByteArrayOutputStream();
-        ImageIO.write (cropped, 'JPG', baos);
+        ImageIO.write (cropped, 'PNG', baos);
         /**
          * Get the bytes from the ByteArrayOutputStream
          */
@@ -45,7 +45,7 @@ exports.resizeImage = function(picBytes, width, height) {
          */
         var resized = Scalr.resize(img, Scalr.Method.SPEED, Scalr.Mode.FIT_EXACT, width, height);
         var baos    = new java.io.ByteArrayOutputStream();
-        ImageIO.write (resized, 'JPG', baos);
+        ImageIO.write (resized, 'PNG', baos);
         /**
          * Get the bytes from the ByteArrayOutputStream
          */
@@ -81,7 +81,7 @@ exports.rotateImage = function(picBytes, degrees) {
         else 
             throw {statusCode:400, statusMessage:"No clue what the rotation value is"};
         var baos    = new java.io.ByteArrayOutputStream();
-        ImageIO.write (resized, 'JPG', baos);
+        ImageIO.write (resized, 'PNG', baos);
         /**
          * Get the bytes from the ByteArrayOutputStream
          */
@@ -115,7 +115,7 @@ exports.flipImage = function(picBytes, direction) {
         else 
             throw {statusCode:400, statusMessage:"No clue what the rotation value is"};
         var baos    = new java.io.ByteArrayOutputStream();
-        ImageIO.write (resized, 'JPG', baos);
+        ImageIO.write (resized, 'PNG', baos);
         /**
          * Get the bytes from the ByteArrayOutputStream
          */
