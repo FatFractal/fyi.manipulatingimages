@@ -1260,7 +1260,8 @@ function FatFractal() {
         else if(clazz) obj.clazz = clazz;
         else if(console.error) console.error("cannot resolve the class name for this object");
 
-        if(m_debug) console.log("FatFractal.createObjAtUri thinks this class is: " + clazz + ".");
+        //if(m_debug) 
+        	console.log("FatFractal.createObjAtUri thinks this class is: " + clazz + ".");
 
         var objAsJson = m_transformReferencesForPersistence(obj);
         var tempFfUrl = obj.ffUrl;
@@ -1461,6 +1462,39 @@ function FatFractal() {
                 if (errorCallback) errorCallback(statusCode, responseText);
             }
         );
+    };
+
+    /**
+    POST an array of objects to a server extension.
+    @param {Array} arr - the object to be serialized and POSTed to your server extension
+    @param {String} extensionUri - the name of the server extension
+    @param {Function} successCallback Function with two arguments - the result object and the statusMessage
+    @param {Function} errorCallback Function with two arguments - Number statusCode and String responseText
+     */
+    this.postBlobToExtension = function (blob, extensionUri, successCallback, errorCallback) {
+        if(! successCallback) successCallback = m_ff.defaultSuccessCallback;
+        if(! successCallback) throw new Error("FatFractal.postBlobToExtension: successCallback not supplied");
+        if(! errorCallback) errorCallback = m_ff.defaultErrorCallback;
+        if(! errorCallback) throw new Error("FatFractal.postBlobToExtension: errorCallback not supplied");
+        var url = m_validUrl(extensionUri, "extension");
+        if(m_baseUrl) url = m_baseUrl + url;
+        m_ajax({
+            type: "POST",
+            url: url,
+            dataType: "application/octet-stream",
+            contentType:"application/octet-stream",
+            mimeType: "application/octet-stream",
+            data: blob,
+            success: function(response) {
+                if(console.log) console.log("FatFractal.postBlobToExtension " + response.statusMessage + ", " + response.responseText);
+                successCallback(response.result, response.statusMessage);
+            },
+            error: function(xmlHTTP) {
+                if(console.error) console.error("FatFractal.postBlobToExtension " + xmlHTTP.status + ", " + xmlHTTP.responseText);
+                m_serverStatusMessage = "HTTP request failed - response code was " + xmlHTTP.status + " responseText was " + xmlHTTP.responseText;
+                if (errorCallback) errorCallback(xmlHTTP.status, xmlHTTP.responseText);
+            }
+        });
     };
 
     /**

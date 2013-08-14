@@ -40,4 +40,5 @@ CREATE HANDLER addThumbnail POST ON /Notes Update as javascript:require('scripts
 # Extension Resources
 #
 CREATE EXTENSION /cleanup AS javascript:require('scripts/ImagesExtensions.js').cleanup();
+CREATE EXTENSION /flipper AS javascript:require('scripts/ImagesExtensions.js').flipper();
 

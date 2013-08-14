@@ -15,7 +15,7 @@
   </script>
   <link rel="stylesheet" href="css/app.css"/>
   <link href="lib/ui-bootstrap/assets/bootstrap.css" rel="stylesheet" media="screen">
-  <style>#drop_zone{border:2px dashed #bbb;-moz-border-radius:5px;-webkit-border-radius:5px;border-radius:5px;padding:25px;text-align:center;font: 20pt bold 'Vollkorn';color:#bbb;width:156px;}
+  <style>#drop-zone{border:2px dashed #bbb;-moz-border-radius:5px;-webkit-border-radius:5px;border-radius:5px;padding:25px;text-align:center;font: 20pt bold 'Vollkorn';color:#bbb;width:156px;}
   </style>
 </head>
 <!--
@@ -29,53 +29,79 @@
     <div class="span4" ui-if="refreshing" ng-cloak spinner style="margin: 20px -20px"></div>
   </div>
 </div>
-<div class="well">
+<div class="well" id="top-level">
   <h1>FYI - processing image data on your backend is easy with FatFractal!</h1>
-  <p>This post demonstrates how to manipulate images on your backend using FatFractal.
-  </p>
-  <div class="well">
-    <h2>The following Model is used with this post</h2>
-    <div class="well">
-      <p>function Note() {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;this.subject = null;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;this.note = null;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;this.imageData = null;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;this.thumbnail = null;<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;return this;<br>
-        }
-      </p>
-    </div>
-    <h4>You can see the data created by this app using the FatFractal DataBrowser (
-      <a href = https://system.fatfractal.com/console/databrowser/databrowser.html?baseUrl=https://fyi.fatfractal.com/manipulatingimages target = _blank>
-        here
-      </a>
-      )
-    </h4>
-    <h4>You can access the source code for the sample application (
-      <a href = https://github.com/FatFractal/fyi.manipulatingimages target = _blank>
-        here
-      </a>
-      )
-    </h4>
+  <p>This application demonstrates how to manipulate images on your backend using FatFractal.</p>
+  <h4>You can see the data created by this app using the FatFractal DataBrowser (
+    <a href = https://system.fatfractal.com/console/databrowser/databrowser.html?baseUrl=https://fyi.fatfractal.com/manipulatingimages target = _blank>
+      here
+    </a>
+    )
+  </h4>
+  <h4>You can access the source code for the sample application (
+    <a href = https://github.com/FatFractal/fyi.manipulatingimages target = _blank>
+      here
+    </a>
+    )
+  </h4>
+  <div class="well" id = "dnd-image-section">
+    <h2>The Image</h2>
+    <h4>We are going to need an image for this test, please drag and drop one here.</h4>
+      <div id="drop-zone">Drop your image here</div>
+      <output id="dropped-image-info"></output>
   </div>
-  <div class="well">
-    <h2>Create a Note in the Notes collection</h2>
-    <div class="well">
-        Subject:<br> 
-		<input id="subject-input" type="text" class="input-medium search-query" value="Please change me...">
-		<br>
-		<br>
-        Note:<br>
-		<textarea id="note-input" rows = "3">This is some text for a note - please change me if you wish...
-	    </textarea>
-		<br>
-        Drag and drop an image here:<br>
-		<div id="drop_zone">Drop your image here</div>
-		<output id="droppedImage"></output>
-      </p>
+  <div class="well" id="event-handler-section">
+    <h2>Event Handler</h2>
+    <p>This test will create a Note with an image in the Notes collection. An sysnchronous Event Handler (addThumbnail) then resizes the image and adds a thumbnail to the object after it has been updated. Note that we use an Update handler because the initial image is actually an update.
+    </p>
+	<h4>
+	  The Event Handler code is (
+      <a href = https://github.com/FatFractal/fyi.manipulatingimages/blob/master/ff-scripts/ImagesEventHandlers.js target = _blank>
+        here
+      </a>
+    )
+    </h4>
+    <div class="well" id="note-input-section">
+      Subject:<br> 
+	  <input id="subject-input" type="text" class="input-medium search-query" value="Please change me...">
+      <br>
+      <br>
+      Note:<br>
+      <textarea id="note-input" rows = "3">This is some text for a note - please change me if you wish...
+	  </textarea>
+      <br>
     </div>
     <button id="new-note-button" class="btn" onclick="SaveNote()">Try it!</button>
     <div id = "new-note-response"></div>
+  </div>
+  <div class="well" id="server-extension-section" class = "hidden">
+    <h2>Server Extension</h2>
+    <p>This test will use a Server Extension to process and return a manipulated image. There are many more things that you can do on the backend with your images, this is just some basic manipulations</p>
+    <h4>The Server Extension code is (
+      <a href = https://github.com/FatFractal/fyi.manipulatingimages/blob/master/ff-scripts/ImagesExtensions.js target = _blank>
+        here
+      </a>
+	  )
+    </h4>
+    <div class="well">
+	    <button id="extension-flip" class="btn" onclick="FlipMe('h')">Flip Horizontal!</button>
+	    <button id="extension-flip" class="btn" onclick="FlipMe('v')">Flip Vertical!</button>
+	    <button id="extension-flip" class="btn" onclick="FlipMe('r')">Rotate 90 degrees!</button>
+	    <button id="extension-flip" class="btn" onclick="FlipMe('horizontal')">Flip Horizontal!</button>
+		<output id="extension-image"></output>
+    </div>
+    <div id = "extension-response"></div>
+  </div>
+  <div class="well" id="model-section">
+    <h2>The following Model is used with this post</h2>
+    <p>function Note() {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this.subject = null;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this.note = null;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this.imageData = null;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;this.thumbnail = null;<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;return this;<br>
+      }
+    </p>
   </div>
 </div>
 <!--Scripts-->
@@ -158,11 +184,25 @@
         var img = document.createElement("img");
         el.appendChild(img);
 		img.src = arrayBufferToDataUri(note.imageData);
-        //var imageDataContext = elid.getContext('2d');
-		//imageDataContext.drawImage(note.imageData, 0, 0)
       }, function(code, msg) {
-        console.error("saveNote() createObjAtUri Error: " + code + " " + msg);
-        el.innerHTML = "<br><div class = 'well red'>Got an error: " + msg + "</div>";
+        console.error("SaveNote() createObjAtUri Error: " + code + " " + msg);
+        el.innerHTML = "<div class = 'well red'>Got an error: " + msg + "</div>";
+      });
+    }, function(code, msg) {
+      console.error("Error logging in: " + code + ", error message" + msg);
+    });
+  }
+  function FlipMe(direction) {
+    ff.login("test_user", "T3st_Us3r", function() {
+      var el = document.getElementById('extension-response');
+	  if(direction !== "h" || direction !== "v") direction = "h";
+      ff.postBlobToExtension(imageData, "/ff/ext/flipper?direction=" + direction, function(resp) {
+        var img = document.createElement("img");
+        el.appendChild(img);
+		img.src = arrayBufferToDataUri(resp);
+      }, function(code, msg) {
+        console.error("FlipMe() createObjAtUri Error: " + code + " " + msg);
+        el.innerHTML = "<div class = 'well red'>Got an error: " + msg + "</div>";
       });
     }, function(code, msg) {
       console.error("Error logging in: " + code + ", error message" + msg);
@@ -190,7 +230,7 @@
 	  var type = "n/a";
 	  if(file.type) typeStr = file.type;
       var outString = '<strong>' + escape(file.name) + '</strong> (' + typeStr + ') - ' + file.size + ' bytes, last modified: ' + dateStr; 
-      document.getElementById('droppedImage').innerHTML = outString;
+      document.getElementById('dropped-image-info').innerHTML = outString;
     } else {
 	  alert("please only image files");
 	}
@@ -202,7 +242,7 @@
   }
 
   // Setup the dnd listeners.
-  var dropZone = document.getElementById('drop_zone');
+  var dropZone = document.getElementById('drop-zone');
   dropZone.addEventListener('dragover', handleDragOver, false);
   dropZone.addEventListener('drop', handleFileSelect, false);
 </script>

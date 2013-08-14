@@ -16,15 +16,42 @@ exports.cleanup = function() {
 }
 
 exports.flipper = function() {
+    print("flipper received request: " + JSON.stringify(ff.getExtensionRequestData()));
     var direction = ff.getExtensionRequestData().httpParameters['direction'];
+    print("flipper received direction param: " + direction);
     var originalImage = ff.getExtensionRequestData().httpContent;
-    if (originalImage === undefined || originalImage === null)
-        throw {statusCode:400, statusMessage:"Image information can't be null"};
-    var flippedImage = common.flipImage(originalImage, direction);
+    print("flipper received image content: " + originalImage);
     var r = ff.response();
+    if (originalImage === undefined || originalImage === null) {
+        r.result = null;
+        r.responseCode = "400";
+        r.statusMessage = "Did not receive an image";
+        r.mimeType = "application/json";
+        return;
+    }
+    if (direction != "h" || direction != "v") direction = "h";
+    var flippedImage = common.flipImage(originalImage, direction);
     r.result = flippedImage;
     r.responseCode="200";
-    r.statusMessage = "rotated your image";
-    r.mimeType = "image/jpeg";
+    r.statusMessage = "flipped your image";
+    r.mimeType = "image/png";
+}
+
+exports.rotator = function() {
+    var direction = ff.getExtensionRequestData().httpParameters['direction'];
+    var originalImage = ff.getExtensionRequestData().httpContent;
+    var r = ff.response();
+    if (originalImage === undefined || originalImage === null) {
+        r.result = null;
+        r.responseCode = "400";
+        r.statusMessage = "Did not receive an image";
+        r.mimeType = "application/json";
+        return;
+    }
+    var flippedImage = common.flipImage(originalImage, direction);
+    r.result = flippedImage;
+    r.responseCode="200";
+    r.statusMessage = "flipped your image";
+    r.mimeType = "image/png";
 }
 
