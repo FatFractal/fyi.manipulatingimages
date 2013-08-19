@@ -72,21 +72,24 @@ exports.rotateImage = function(picBytes, degrees) {
          * Rotate the picture
          */
        var rotated = null;
-       if(degrees == 90) 
+       if(degrees == "90") 
             rotated = Scalr.rotate(img, Scalr.Rotation.CW_90);
-        else if(degrees == 180) 
+        else if(degrees == "180") 
             rotated = Scalr.rotate(img, Scalr.Rotation.CW_180);
-        else if(degrees == 270) 
+        else if(degrees == "270") 
             rotated = Scalr.rotate(img, Scalr.Rotation.CW_270);
         else 
             throw {statusCode:400, statusMessage:"No clue what the rotation value is"};
         var baos    = new java.io.ByteArrayOutputStream();
-        ImageIO.write (resized, 'PNG', baos);
+        ImageIO.write (rotated, 'PNG', baos);
         /**
          * Get the bytes from the ByteArrayOutputStream
          */
         rotatedBytes = new bin.ByteArray(baos.toByteArray());
-    } catch (e) {}
+    } catch (e) {
+        print("rotateImage error: " + e);
+        return;
+    }
     return rotatedBytes;
 }
 
@@ -97,6 +100,7 @@ exports.flipImage = function(picBytes, direction) {
      * There are ImageIO read methods for InputStream, File and URL. We've got a
      * ByteArray. So let's create a ByteArrayInputStream.
      */
+    print("flipImage received image content: " + picBytes.length);
     if (picBytes === null)
         throw {statusCode:400, statusMessage:"Image can't be null "};
     if (direction === null)
@@ -114,13 +118,17 @@ exports.flipImage = function(picBytes, direction) {
             flipped = Scalr.rotate(img, Scalr.Rotation.FLIP_VERT);
         else 
             throw {statusCode:400, statusMessage:"No clue what the rotation value is"};
+        print("flipImage flipped image content: " + flipped);
         var baos    = new java.io.ByteArrayOutputStream();
-        ImageIO.write (resized, 'PNG', baos);
+        ImageIO.write (flipped, 'PNG', baos);
         /**
          * Get the bytes from the ByteArrayOutputStream
          */
         flippedBytes = new bin.ByteArray(baos.toByteArray());
-    } catch (e) {}
+    } catch (e) {
+        print("flipImage error: " + e);
+        return;
+    }
     return flippedBytes;
 }
 

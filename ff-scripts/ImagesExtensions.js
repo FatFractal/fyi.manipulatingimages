@@ -19,13 +19,25 @@ exports.flipper = function() {
     print("flipper received request: " + JSON.stringify(ff.getExtensionRequestData()));
     var direction = ff.getExtensionRequestData().httpParameters['direction'];
     print("flipper received direction param: " + direction);
-    var originalImage = ff.getExtensionRequestData().httpContent;
-    print("flipper received image content: " + originalImage);
+    //var noteuri = ff.getExtensionRequestData().httpContent.ffUrl;
+    //print("flipper received noteuri: " + noteuri);
+    //var note = ff.getObjFromUri(noteuri);
+    var note = ff.getExtensionRequestData().httpContent;
+    print("flipper received note: " + note);
     var r = ff.response();
+    if (note === undefined || note === null) {
+        r.result = null;
+        r.responseCode = "400";
+        r.statusMessage = "Did not receive a Note object";
+        r.mimeType = "application/json";
+        return;
+    }
+    //var originalImage = ff.getBlob("imageData", note);    
+    var originalImage = note.imageData;    
     if (originalImage === undefined || originalImage === null) {
         r.result = null;
         r.responseCode = "400";
-        r.statusMessage = "Did not receive an image";
+        r.statusMessage = "Could not find an image for the Note";
         r.mimeType = "application/json";
         return;
     }
@@ -39,17 +51,26 @@ exports.flipper = function() {
 
 exports.rotator = function() {
     var direction = ff.getExtensionRequestData().httpParameters['direction'];
-    var originalImage = ff.getExtensionRequestData().httpContent;
+    var note = ff.getExtensionRequestData().httpContent;
     var r = ff.response();
-    if (originalImage === undefined || originalImage === null) {
+    if (note === undefined || note === null) {
         r.result = null;
         r.responseCode = "400";
-        r.statusMessage = "Did not receive an image";
+        r.statusMessage = "Did not receive a Note object";
         r.mimeType = "application/json";
         return;
     }
-    var flippedImage = common.flipImage(originalImage, direction);
-    r.result = flippedImage;
+    var originalImage = ff.getBlob("imageData", note);    
+    if (originalImage === undefined || originalImage === null) {
+        r.result = null;
+        r.responseCode = "400";
+        r.statusMessage = "Could not find an image for the Note";
+        r.mimeType = "application/json";
+        return;
+    }
+    if (direction != "90" || direction != "180" || direction != "270") direction = "90";
+    var rotatedImage = common.rotateImage(originalImage, direction);
+    r.result = rotatedImage;
     r.responseCode="200";
     r.statusMessage = "flipped your image";
     r.mimeType = "image/png";

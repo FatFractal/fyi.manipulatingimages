@@ -51,7 +51,7 @@
       <output id="dropped-image-info"></output>
   </div>
   <div class="well" id="event-handler-section">
-    <h2>Event Handler</h2>
+    <h2>Event Handler (Under Construction)</h2>
     <p>This test will create a Note with an image in the Notes collection. An sysnchronous Event Handler (addThumbnail) then resizes the image and adds a thumbnail to the object after it has been updated. Note that we use an Update handler because the initial image is actually an update.
     </p>
 	<h4>
@@ -67,15 +67,14 @@
       <br>
       <br>
       Note:<br>
-      <textarea id="note-input" rows = "3">This is some text for a note - please change me if you wish...
-	  </textarea>
+      <textarea id="note-input" rows = "3">This is some text for a note - please change me if you wish...</textarea>
       <br>
     </div>
     <button id="new-note-button" class="btn" onclick="SaveNote()">Try it!</button>
     <div id = "new-note-response"></div>
   </div>
   <div class="well" id="server-extension-section" class = "hidden">
-    <h2>Server Extension</h2>
+    <h2>Server Extension (Under Construction)</h2>
     <p>This test will use a Server Extension to process and return a manipulated image. There are many more things that you can do on the backend with your images, this is just some basic manipulations</p>
     <h4>The Server Extension code is (
       <a href = https://github.com/FatFractal/fyi.manipulatingimages/blob/master/ff-scripts/ImagesExtensions.js target = _blank>
@@ -86,8 +85,9 @@
     <div class="well">
 	    <button id="extension-flip" class="btn" onclick="FlipMe('h')">Flip Horizontal!</button>
 	    <button id="extension-flip" class="btn" onclick="FlipMe('v')">Flip Vertical!</button>
-	    <button id="extension-flip" class="btn" onclick="FlipMe('r')">Rotate 90 degrees!</button>
-	    <button id="extension-flip" class="btn" onclick="FlipMe('horizontal')">Flip Horizontal!</button>
+	    <button id="extension-flip" class="btn" onclick="RotateMe('90')">Rotate 90 degrees!</button>
+	    <button id="extension-flip" class="btn" onclick="RotateMe('180')">Rotate 180 degrees!</button>
+	    <button id="extension-flip" class="btn" onclick="RotateMe('270')">Rotate 270 degrees!</button>
 		<output id="extension-image"></output>
     </div>
     <div id = "extension-response"></div>
@@ -133,9 +133,14 @@
       this.imageData = obj.imageData;
 	  this.thumbnail = obj.thumbnail;
     }
+    this.printMe = function() {
+ 	   if(this.imageData) this.imageData = "binary data: " + this.imageData.length + " bytes";
+ 	   if(this.thumbnail) this.thumbnail = "binary data: " + this.thumbnail.length + " bytes";
+ 	   return this;
     return this;
+    }
   }
-  var imageData;
+  var note;
   function arrayBufferToDataUri(arrayBuffer) {
     var base64 = '',
       encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
@@ -171,19 +176,51 @@
       m.subject = elsi.value;
       m.note = elni.value;
       m.imageData = imageData;
-      ff.createObjAtUri(m, "/Notes", function(resp) {
-        var note = new Note(resp);
-        var str = js_beautify(JSON.stringify(note), {
-          indent_size: 4,
-          indent_char: '&nbsp;',
-          linefeed_char: '<br>'
+      ff.createObjAtUri(m, "/Notes", function(obj) {
+		//temporary workaround
+		ff.getObjFromUri(obj.ffUrl , function(resp) {
+             var wellWrap = document.createElement("div");
+    		 wellWrap.className = "well blue";
+             var mediaDiv = document.createElement("div");
+    		 mediaDiv.className = "media";
+             var mediaBody = document.createElement("div");
+    		 mediaBody.className = "media-body";		 
+             var mediaHeading = document.createElement("p");
+    		 mediaHeading.className = "media-heading";		 
+             el.appendChild(wellWrap);
+             wellWrap.appendChild(mediaDiv);
+             var p = new Note(resp).printMe();
+             var imageDataA = document.createElement("a");
+       		 imageDataA.className = "pull-left";
+       		 imageDataA.style.clear = 'both';
+             imageDataA.innerHTML = "imageData - original image";
+             var imageDataImg = document.createElement("img");
+             imageDataImg.className = "media-object";
+         	 imageDataImg.src = arrayBufferToDataUri(resp.imageData);
+             imageDataA.appendChild(imageDataImg); 
+             mediaDiv.appendChild(imageDataA);
+             var thumbnailA = document.createElement("a");
+       		 thumbnailA.className = "pull-left";
+       		 thumbnailA.style.clear = 'both';
+             thumbnailA.innerHTML = "thumbnail - resized image";
+             var thumbnailImg = document.createElement("img");
+             thumbnailImg.className = "media-object";
+         	 thumbnailImg.src = arrayBufferToDataUri(resp.thumbnail);
+             thumbnailA.appendChild(thumbnailImg); 
+             mediaDiv.appendChild(thumbnailA);
+             var str = js_beautify(JSON.stringify(p), {
+               indent_size: 4,
+               indent_char: '&nbsp;',
+               linefeed_char: '<br>'
+            });
+            mediaDiv.appendChild(mediaBody); 
+            mediaBody.appendChild(mediaHeading); 
+            var elStr =  "Note object was retrieved from the Notes Collection with data: " + str;
+            mediaHeading.innerHTML = "<br><div class = 'well blue'>" + elStr + "</div>";
+        }, function(code, msg) {
+          console.error("SaveNote() getObjFromUri Error: " + code + " " + msg);
+          el.innerHTML = "<div class = 'well red'>Got an error: " + msg + "</div>";
         });
-        var img = document.createElement("img");
-        el.innerHTML = "<div class = 'well blue' style = 'margin-top:25px;'><p>Note was created in the  " +
-          resp.ffRL + " Collection with data: " + str + "</p></div>";
-        var img = document.createElement("img");
-        el.appendChild(img);
-		img.src = arrayBufferToDataUri(note.imageData);
       }, function(code, msg) {
         console.error("SaveNote() createObjAtUri Error: " + code + " " + msg);
         el.innerHTML = "<div class = 'well red'>Got an error: " + msg + "</div>";
@@ -195,8 +232,36 @@
   function FlipMe(direction) {
     ff.login("test_user", "T3st_Us3r", function() {
       var el = document.getElementById('extension-response');
+      var elsi = document.getElementById('subject-input');
+      var elni = document.getElementById('note-input');
+      var m = new Note();
+      m.subject = elsi.value;
+      m.note = elni.value;
+      m.imageData = imageData;
 	  if(direction !== "h" || direction !== "v") direction = "h";
-      ff.postBlobToExtension(imageData, "/ff/ext/flipper?direction=" + direction, function(resp) {
+      ff.postObjToExtension(m, "/ff/ext/flipper?direction=" + direction, function(resp) {
+        var img = document.createElement("img");
+        el.appendChild(img);
+		img.src = arrayBufferToDataUri(resp);
+      }, function(code, msg) {
+        console.error("FlipMe() createObjAtUri Error: " + code + " " + msg);
+        el.innerHTML = "<div class = 'well red'>Got an error: " + msg + "</div>";
+      });
+    }, function(code, msg) {
+      console.error("Error logging in: " + code + ", error message" + msg);
+    });
+  }
+  function RotateMe(degrees) {
+    ff.login("test_user", "T3st_Us3r", function() {
+      var el = document.getElementById('extension-response');
+      var elsi = document.getElementById('subject-input');
+      var elni = document.getElementById('note-input');
+      var m = new Note();
+      m.subject = elsi.value;
+      m.note = elni.value;
+      m.imageData = imageData;
+	  if(degrees !== "90" || degrees !== "180" || degrees !== "270") degrees = "90";
+      ff.postObjToExtension(m, "/ff/ext/rotator?degrees=" + degrees, function(resp) {
         var img = document.createElement("img");
         el.appendChild(img);
 		img.src = arrayBufferToDataUri(resp);
@@ -241,7 +306,7 @@
     evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
   }
 
-  // Setup the dnd listeners.
+  // dnd listeners.
   var dropZone = document.getElementById('drop-zone');
   dropZone.addEventListener('dragover', handleDragOver, false);
   dropZone.addEventListener('drop', handleFileSelect, false);
