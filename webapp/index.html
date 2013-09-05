@@ -44,11 +44,20 @@
     </a>
     )
   </h4>
-  <div class="well" id = "dnd-image-section">
-    <h2>The Image</h2>
-    <h4>We are going to need an image for this test, please drag and drop one here.</h4>
-      <div id="drop-zone">Drop your image here</div>
-      <output id="dropped-image-info"></output>
+  <div class="well" id ="dnd-image-section">
+    <h2>The Note (with an image)</h2>
+      <div class="well" id="note-input-section">
+	      <h4>We are going to need an image for this test, please drag and drop one here.</h4>
+          <div id="drop-zone">Drop your image here</div>
+          <output id="dropped-image-info"></output>
+          Subject:<br> 
+  	      <input id="subject-input" type="text" class="input-medium search-query" value="Please change me...">
+          <br>
+          <br>
+          Note:<br>
+          <textarea id="note-input" rows = "3">This is some text for a note - please change me if you wish...</textarea>
+          <br>
+      </div>
   </div>
   <div class="well" id="event-handler-section">
     <h2>Event Handler (Under Construction)</h2>
@@ -61,19 +70,10 @@
       </a>
     )
     </h4>
-    <div class="well" id="note-input-section">
-      Subject:<br> 
-	  <input id="subject-input" type="text" class="input-medium search-query" value="Please change me...">
-      <br>
-      <br>
-      Note:<br>
-      <textarea id="note-input" rows = "3">This is some text for a note - please change me if you wish...</textarea>
-      <br>
-    </div>
     <button id="new-note-button" class="btn" onclick="SaveNote()">Try it!</button>
     <div id = "new-note-response"></div>
   </div>
-  <div class="well" id="server-extension-section" class = "hidden">
+  <div class="well" id="server-extension-section">
     <h2>Server Extension (Under Construction)</h2>
     <p>This test will use a Server Extension to process and return a manipulated image. There are many more things that you can do on the backend with your images, this is just some basic manipulations</p>
     <h4>The Server Extension code is (
@@ -134,11 +134,11 @@
 	  this.thumbnail = obj.thumbnail;
     }
     this.printMe = function() {
- 	   if(this.imageData) this.imageData = "binary data: " + this.imageData.length + " bytes";
- 	   if(this.thumbnail) this.thumbnail = "binary data: " + this.thumbnail.length + " bytes";
+ 	   if(this.imageData) this.imageData = "binary data: " + this.imageData.byteLength + " bytes";
+ 	   if(this.thumbnail) this.thumbnail = "binary data: " + this.thumbnail.byteLength + " bytes";
  	   return this;
-    return this;
     }
+    return this;
   }
   var note;
   function arrayBufferToDataUri(arrayBuffer) {
@@ -172,6 +172,7 @@
       var el = document.getElementById('new-note-response');
       var elsi = document.getElementById('subject-input');
       var elni = document.getElementById('note-input');
+      el.innerHTML = "";
       var m = new Note();
       m.subject = elsi.value;
       m.note = elni.value;
@@ -179,6 +180,7 @@
       ff.createObjAtUri(m, "/Notes", function(obj) {
 		//temporary workaround
 		ff.getObjFromUri(obj.ffUrl , function(resp) {
+			note = resp;
              var wellWrap = document.createElement("div");
     		 wellWrap.className = "well blue";
              var mediaDiv = document.createElement("div");
@@ -230,48 +232,119 @@
     });
   }
   function FlipMe(direction) {
-    ff.login("test_user", "T3st_Us3r", function() {
-      var el = document.getElementById('extension-response');
-      var elsi = document.getElementById('subject-input');
-      var elni = document.getElementById('note-input');
-      var m = new Note();
-      m.subject = elsi.value;
-      m.note = elni.value;
-      m.imageData = imageData;
-	  if(direction !== "h" || direction !== "v") direction = "h";
-      ff.postObjToExtension(m, "/ff/ext/flipper?direction=" + direction, function(resp) {
-        var img = document.createElement("img");
-        el.appendChild(img);
-		img.src = arrayBufferToDataUri(resp);
-      }, function(code, msg) {
-        console.error("FlipMe() createObjAtUri Error: " + code + " " + msg);
-        el.innerHTML = "<div class = 'well red'>Got an error: " + msg + "</div>";
-      });
-    }, function(code, msg) {
-      console.error("Error logging in: " + code + ", error message" + msg);
-    });
+      if(note && note.imageData) {
+	      ff.login("test_user", "T3st_Us3r", function() {
+		  if(direction !== "h" || direction !== "v") direction = "h";
+	      var el = document.getElementById('extension-response');
+	      el.innerHTML = "";
+	      ff.postObjToExtension(note, "/ff/ext/flipper?direction=" + direction, function(resp) {
+  			note = resp;
+               var wellWrap = document.createElement("div");
+      		 wellWrap.className = "well blue";
+               var mediaDiv = document.createElement("div");
+      		 mediaDiv.className = "media";
+               var mediaBody = document.createElement("div");
+      		 mediaBody.className = "media-body";		 
+               var mediaHeading = document.createElement("p");
+      		 mediaHeading.className = "media-heading";		 
+               el.appendChild(wellWrap);
+               wellWrap.appendChild(mediaDiv);
+               var p = new Note(resp).printMe();
+               var imageDataA = document.createElement("a");
+         		 imageDataA.className = "pull-left";
+         		 imageDataA.style.clear = 'both';
+               imageDataA.innerHTML = "imageData - original image";
+               var imageDataImg = document.createElement("img");
+               imageDataImg.className = "media-object";
+           	 imageDataImg.src = arrayBufferToDataUri(resp.imageData);
+               imageDataA.appendChild(imageDataImg); 
+               mediaDiv.appendChild(imageDataA);
+               var thumbnailA = document.createElement("a");
+         		 thumbnailA.className = "pull-left";
+         		 thumbnailA.style.clear = 'both';
+               thumbnailA.innerHTML = "thumbnail - resized image";
+               var thumbnailImg = document.createElement("img");
+               thumbnailImg.className = "media-object";
+           	 thumbnailImg.src = arrayBufferToDataUri(resp.thumbnail);
+               thumbnailA.appendChild(thumbnailImg); 
+               mediaDiv.appendChild(thumbnailA);
+               var str = js_beautify(JSON.stringify(p), {
+                 indent_size: 4,
+                 indent_char: '&nbsp;',
+                 linefeed_char: '<br>'
+              });
+              mediaDiv.appendChild(mediaBody); 
+              mediaBody.appendChild(mediaHeading); 
+              var elStr =  "Note object was retrieved from the Notes Collection with data: " + str;
+              mediaHeading.innerHTML = "<br><div class = 'well blue'>" + elStr + "</div>";
+          }, function(code, msg) {
+            console.error("SaveNote() postObjToExtension Error: " + code + " " + msg);
+            el.innerHTML = "<div class = 'well red'>Got an error: " + msg + "</div>";
+          });
+	    }, function(code, msg) {
+	      console.error("Error logging in: " + code + ", error message" + msg);
+	    });
+      } else alert("please save a note first");
   }
   function RotateMe(degrees) {
-    ff.login("test_user", "T3st_Us3r", function() {
-      var el = document.getElementById('extension-response');
-      var elsi = document.getElementById('subject-input');
-      var elni = document.getElementById('note-input');
-      var m = new Note();
-      m.subject = elsi.value;
-      m.note = elni.value;
-      m.imageData = imageData;
-	  if(degrees !== "90" || degrees !== "180" || degrees !== "270") degrees = "90";
-      ff.postObjToExtension(m, "/ff/ext/rotator?degrees=" + degrees, function(resp) {
-        var img = document.createElement("img");
-        el.appendChild(img);
-		img.src = arrayBufferToDataUri(resp);
-      }, function(code, msg) {
-        console.error("FlipMe() createObjAtUri Error: " + code + " " + msg);
-        el.innerHTML = "<div class = 'well red'>Got an error: " + msg + "</div>";
-      });
-    }, function(code, msg) {
-      console.error("Error logging in: " + code + ", error message" + msg);
-    });
+  	if (note && note.imageData) {
+  		ff.login("test_user", "T3st_Us3r", function() {
+  			var el = document.getElementById('extension-response');
+  			el.innerHTML = "";
+  			if (degrees !== "90" || degrees !== "180" || degrees !== "270") degrees = "90";
+  			ff.postObjToExtension(note, "/ff/ext/rotator?degrees=" + degrees, function(obj) {
+  				ff.getObjFromUri(obj.ffUrl, function(resp) {
+  					note = resp;
+  					var wellWrap = document.createElement("div");
+  					wellWrap.className = "well blue";
+  					var mediaDiv = document.createElement("div");
+  					mediaDiv.className = "media";
+  					var mediaBody = document.createElement("div");
+  					mediaBody.className = "media-body";
+  					var mediaHeading = document.createElement("p");
+  					mediaHeading.className = "media-heading";
+  					el.appendChild(wellWrap);
+  					wellWrap.appendChild(mediaDiv);
+  					var p = new Note(resp).printMe();
+  					var imageDataA = document.createElement("a");
+  					imageDataA.className = "pull-left";
+  					imageDataA.style.clear = 'both';
+  					imageDataA.innerHTML = "imageData - original image";
+  					var imageDataImg = document.createElement("img");
+  					imageDataImg.className = "media-object";
+  					imageDataImg.src = arrayBufferToDataUri(resp.imageData);
+  					imageDataA.appendChild(imageDataImg);
+  					mediaDiv.appendChild(imageDataA);
+  					var thumbnailA = document.createElement("a");
+  					thumbnailA.className = "pull-left";
+  					thumbnailA.style.clear = 'both';
+  					thumbnailA.innerHTML = "thumbnail - resized image";
+  					var thumbnailImg = document.createElement("img");
+  					thumbnailImg.className = "media-object";
+  					thumbnailImg.src = arrayBufferToDataUri(resp.thumbnail);
+  					thumbnailA.appendChild(thumbnailImg);
+  					mediaDiv.appendChild(thumbnailA);
+  					var str = js_beautify(JSON.stringify(p), {
+  						indent_size: 4,
+  						indent_char: '&nbsp;',
+  						linefeed_char: '<br>'
+  					});
+  					mediaDiv.appendChild(mediaBody);
+  					mediaBody.appendChild(mediaHeading);
+  					var elStr = "Note object was retrieved from the Notes Collection with data: " + str;
+  					mediaHeading.innerHTML = "<br><div class = 'well blue'>" + elStr + "</div>";
+  				}, function(code, msg) {
+  					console.error("SaveNote() getObjFromUri Error: " + code + " " + msg);
+  					el.innerHTML = "<div class = 'well red'>Got an error: " + msg + "</div>";
+  				});
+  			}, function(code, msg) {
+  				console.error("FlipMe() postObjToExtension Error: " + code + " " + msg);
+  				el.innerHTML = "<div class = 'well red'>Got an error: " + msg + "</div>";
+  			});
+  		}, function(code, msg) {
+  			console.error("Error logging in: " + code + ", error message" + msg);
+  		});
+  	} else alert("please save a note first");
   }
   function handleFileSelect(evt) {
     evt.stopPropagation();

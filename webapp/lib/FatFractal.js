@@ -159,6 +159,18 @@ function FatFractal() {
     }
 
     /*
+    Prevent errors with Internet Explorer if Array.indexOf is not available.
+     */
+    if (!Array.prototype.indexOf) { 
+        Array.prototype.indexOf = function(obj, start) {
+            for (var i = (start || 0), j = this.length; i < j; i++) {
+                if (this[i] === obj) { return i; }
+            }
+            return -1;
+        }
+    }
+
+    /*
     This local variable (String) will override the natural relative addressing with a specified baseUrl, defaults to null.
      */
     var m_baseUrl = null;
@@ -1552,110 +1564,20 @@ function FatFractal() {
         if(! errorCallback) errorCallback = m_ff.defaultErrorCallback;
         if(! errorCallback) throw new Error("FatFractal.postObjToExtension: errorCallback not supplied");
         var url = m_validUrl(extensionUri, "extension");
-        if(!Array.isArray(obj)) {
-            this.createObjAtUri(obj, url,
-                function(result, statusMessage) {
-//                    var retVal = null;
-//                    if (response.length > 0)
-//                        retVal = response[0];
-//                    successCallback(retVal, response.statusMessage);
-                    successCallback(result, statusMessage);
-                },
-                function(statusCode, responseText) {
-                    if(console.error) console.error("FatFractal.postObjToExtension " + statusCode + ", " + responseText);
-                    m_serverStatusMessage = "HTTP request failed - response code was " + statusCode + " responseText was " + responseText;
-                    if (errorCallback) errorCallback(statusCode, responseText);
-                }
-            );
-        } else {
-            var outArray = []
-            for (var i = 0; i < obj.length; i++) {
-                function getObjectClass(obj) {
-                    if(obj && obj.constructor && obj.constructor.toString) {
-                        var obj = obj.constructor.toString().match(/function\s*(\w+)/);
-                        if(obj && obj.length == 2) {
-                            return obj[1];
-                        }
-                    }
-                    return undefined;
-                }
-
-                var clazz = getObjectClass(obj[i]);
-                if(obj[i].clazz) console.log("object has clazz defined: " +  obj[i].clazz);
-                else if(clazz) obj[i].clazz = clazz;
-                else if(console.error) console.error("cannot resolve the class name for this object");
-
-                if(m_debug) console.log("FatFractal.postArrayToExtension thinks this class is: " + clazz + ".");
-
-                var objAsJson = m_transformReferencesForPersistence(obj[i]);
-                outArray.push(objAsJson);
-                var tempFfUrls = [];
-                tempFfUrls.push(obj[i].ffUrl);
-
+        this.createObjAtUri(obj, url,
+            function(result, statusMessage) {
+//                var retVal = null;
+//                if (response.length > 0)
+//                    retVal = response[0];
+//                successCallback(retVal, response.statusMessage);
+                successCallback(result, statusMessage);
+            },
+            function(statusCode, responseText) {
+                if(console.error) console.error("FatFractal.postObjToExtension " + statusCode + ", " + responseText);
+                m_serverStatusMessage = "HTTP request failed - response code was " + statusCode + " responseText was " + responseText;
+                if (errorCallback) errorCallback(statusCode, responseText);
             }
-            if(!Array.isArray(outArray) || outArray.length <=0) throw new Error("FatFractal.postArrayToExtension: outArray nothing to send");
-            var outObj = {data:outArray};
-            m_ajax({
-                type: "POST",
-                url: url,
-                dataType: 'json',
-                contentType:'application/json',
-                data: JSON.stringify(outObj),
-                success: function(response) {
-                    //if(m_debug) 
-                        console.log("FatFractal.postArrayToExtension: CREATE response is " + JSON.stringify(response));
-                    // expect an array in response
-                    /*
-                    if(Array.isArray(response.result) && response.result.length >0) {
-                        var respArr = [];
-                        console.log("FatFractal.postArrayToExtension: Processing " + response.result.length + " objects");
-                        for (var i = 0; i < response.result.length; i++) {
-                        	var obj = outArray[i];
-                            console.log("m_copyDataToObjFromResponse: " + JSON.stringify(obj) + ", " + JSON.stringify(response.result[i]));
-                        	m_copyDataToObjFromResponse(obj, response.result[i]);
-                            if(m_debug) console.log("FatFractal.createObjAtUri: Adding object to local cache");
-                            m_cache[response.result[i].ffUrl] = obj;
-                            var pendingBlobsForObj = m_pendingBlobs[tempFfUrls[i]];
-                            if (pendingBlobsForObj) for (var key in pendingBlobsForObj) {
-                                if(m_debug) console.log("FatFractal.createObjAtUri will save a blob called: " + key);
-                                var blob = pendingBlobsForObj[key];
-                                if(m_debug) console.log("FatFractal.createObjAtUri is saving a blob with byteLength : " + blob.byteLength + " bytes: ");
-                                if(blob.byteLength > 0) {
-                                    //var data = new Uint8Array(blob);
-                                    var url = m_validUrl(response.result.ffUrl);
-                                    if(m_baseUrl) url = m_baseUrl + url;
-                                    m_ajax({
-                                        type: "PUT",
-                                        url: url + "/" + key,
-                                        dataType: "application/octet-stream",
-                                        contentType:"application/octet-stream",
-                                        mimeType: "application/octet-stream",
-                                        data: blob,
-                                        success: function(response) {
-                                            if(console.log) console.log("FatFractal.createObjAtUri " + response.status + ", " + response.responseText);
-                                        },
-                                        error: function(xmlHTTP) {
-                                            if(console.error) console.error("FatFractal.createObjAtUri " + xmlHTTP.status + ", " + xmlHTTP.responseText);
-                                        }
-                                    });
-                                }
-                                if(m_debug) console.log("FatFractal.createObjAtUri is removing blob from queue.");
-                                delete pendingBlobsForObj[key];
-                            }
-                            m_loadAllReferences(obj);
-                            respArr.push(obj);
-                        }
-                    } else console.log("was expecting an array back");
-                    */
-                    successCallback(response.result, response.statusMessage);
-                },
-                error: function(xmlHTTP) {
-                    if(console.error) console.error("FatFractal.createObjAtUri " + xmlHTTP.status + ", " + xmlHTTP.responseText);
-                    m_serverStatusMessage = "HTTP request failed - response code was " + xmlHTTP.status + " responseText was " + xmlHTTP.responseText;
-                    if (errorCallback) errorCallback(xmlHTTP.status, xmlHTTP.responseText);
-                }
-            });
-        }
+        );
     };
 
     /**

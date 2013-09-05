@@ -16,14 +16,10 @@ exports.cleanup = function() {
 }
 
 exports.flipper = function() {
-    print("flipper received request: " + JSON.stringify(ff.getExtensionRequestData()));
+    //print("flipper received request: " + JSON.stringify(ff.getExtensionRequestData()));
     var direction = ff.getExtensionRequestData().httpParameters['direction'];
     print("flipper received direction param: " + direction);
-    //var noteuri = ff.getExtensionRequestData().httpContent.ffUrl;
-    //print("flipper received noteuri: " + noteuri);
-    //var note = ff.getObjFromUri(noteuri);
-    var note = ff.getExtensionRequestData().httpContent;
-    print("flipper received note: " + note);
+    var note = ff.getObjFromUri(ff.getExtensionRequestData().httpContent.ffUrl);
     var r = ff.response();
     if (note === undefined || note === null) {
         r.result = null;
@@ -32,8 +28,8 @@ exports.flipper = function() {
         r.mimeType = "application/json";
         return;
     }
-    //var originalImage = ff.getBlob("imageData", note);    
-    var originalImage = note.imageData;    
+    print("flipper received note: " + note);
+    var originalImage = ff.getBlob("imageData", note);    
     if (originalImage === undefined || originalImage === null) {
         r.result = null;
         r.responseCode = "400";
@@ -43,15 +39,18 @@ exports.flipper = function() {
     }
     if (direction != "h" || direction != "v") direction = "h";
     var flippedImage = common.flipImage(originalImage, direction);
-    r.result = flippedImage;
+    note = ff.saveBlob(note, 'imageData', flippedImage, 'image/png');
+    //note = ff.updateObj(note);
+    r.result = note;
     r.responseCode="200";
     r.statusMessage = "flipped your image";
-    r.mimeType = "image/png";
+    r.mimeType = "application/json";
 }
 
 exports.rotator = function() {
+    //print("rotator received request: " + JSON.stringify(ff.getExtensionRequestData()));
     var direction = ff.getExtensionRequestData().httpParameters['direction'];
-    var note = ff.getExtensionRequestData().httpContent;
+    var note = ff.getObjFromUri(ff.getExtensionRequestData().httpContent.ffUrl);
     var r = ff.response();
     if (note === undefined || note === null) {
         r.result = null;
@@ -60,6 +59,7 @@ exports.rotator = function() {
         r.mimeType = "application/json";
         return;
     }
+    print("rotator received note: " + note);
     var originalImage = ff.getBlob("imageData", note);    
     if (originalImage === undefined || originalImage === null) {
         r.result = null;
@@ -70,9 +70,11 @@ exports.rotator = function() {
     }
     if (direction != "90" || direction != "180" || direction != "270") direction = "90";
     var rotatedImage = common.rotateImage(originalImage, direction);
-    r.result = rotatedImage;
+    note = ff.saveBlob(note, 'imageData', rotatedImage, 'image/png');
+    //note = ff.updateObj(note);
+    r.result = note;
     r.responseCode="200";
-    r.statusMessage = "flipped your image";
-    r.mimeType = "image/png";
+    r.statusMessage = "rotated your image";
+    r.mimeType = "application/json";
 }
 

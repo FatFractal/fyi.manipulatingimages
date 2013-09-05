@@ -38,12 +38,14 @@ exports.resizeImage = function(picBytes, width, height) {
      * ByteArray. So let's create a ByteArrayInputStream.
      */
     try {
+        print("resizeImage received image content: " + picBytes);
         var bais = new java.io.ByteArrayInputStream(picBytes);
         var img  = ImageIO.read(bais);
         /**
          * Resize the picture
          */
         var resized = Scalr.resize(img, Scalr.Method.SPEED, Scalr.Mode.FIT_EXACT, width, height);
+        print("resizeImage resized image content: " + resized);
         var baos    = new java.io.ByteArrayOutputStream();
         ImageIO.write (resized, 'PNG', baos);
         /**
@@ -65,6 +67,7 @@ exports.rotateImage = function(picBytes, degrees) {
         throw {statusCode:400, statusMessage:"Image can't be null "};
     if (degrees === null)
         throw {statusCode:400, statusMessage:"Rotation value can't be null "};
+    print("rotateImage received image content: " + picBytes);
     try {
         var bais = new java.io.ByteArrayInputStream(picBytes);
         var img  = ImageIO.read(bais);
@@ -80,6 +83,7 @@ exports.rotateImage = function(picBytes, degrees) {
             rotated = Scalr.rotate(img, Scalr.Rotation.CW_270);
         else 
             throw {statusCode:400, statusMessage:"No clue what the rotation value is"};
+        print("rotateImage rotated image content: " + rotated);
         var baos    = new java.io.ByteArrayOutputStream();
         ImageIO.write (rotated, 'PNG', baos);
         /**
@@ -100,11 +104,11 @@ exports.flipImage = function(picBytes, direction) {
      * There are ImageIO read methods for InputStream, File and URL. We've got a
      * ByteArray. So let's create a ByteArrayInputStream.
      */
-    print("flipImage received image content: " + picBytes.length);
     if (picBytes === null)
         throw {statusCode:400, statusMessage:"Image can't be null "};
     if (direction === null)
         throw {statusCode:400, statusMessage:"Rotation value can't be null "};
+    print("flipImage received image content: " + picBytes);
     try {
         var bais = new java.io.ByteArrayInputStream(picBytes);
         var img  = ImageIO.read(bais);
