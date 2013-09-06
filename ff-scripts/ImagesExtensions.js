@@ -18,8 +18,10 @@ exports.cleanup = function() {
 exports.flipper = function() {
     //print("flipper received request: " + JSON.stringify(ff.getExtensionRequestData()));
     var direction = ff.getExtensionRequestData().httpParameters['direction'];
+    var noteFFUrl = ff.getExtensionRequestData().httpParameters['noteFFUrl'];
     print("flipper received direction param: " + direction);
-    var note = ff.getObjFromUri(ff.getExtensionRequestData().httpContent.ffUrl);
+    print("flipper received noteFFUrl param: " + noteFFUrl);
+    var note = ff.getObjFromUri(noteFFUrl);
     var r = ff.response();
     if (note === undefined || note === null) {
         r.result = null;
@@ -50,8 +52,11 @@ exports.flipper = function() {
 
 exports.rotator = function() {
     //print("rotator received request: " + JSON.stringify(ff.getExtensionRequestData()));
-    var direction = ff.getExtensionRequestData().httpParameters['direction'];
-    var note = ff.getObjFromUri(ff.getExtensionRequestData().httpContent.ffUrl);
+    var degrees = ff.getExtensionRequestData().httpParameters['degrees'];
+    var noteFFUrl = ff.getExtensionRequestData().httpParameters['noteFFUrl'];
+    print("flipper received degrees param: " + degrees);
+    print("flipper received noteFFUrl param: " + noteFFUrl);
+    var note = ff.getObjFromUri(noteFFUrl);
     var r = ff.response();
     if (note === undefined || note === null) {
         r.result = null;
@@ -69,8 +74,10 @@ exports.rotator = function() {
         r.mimeType = "application/json";
         return;
     }
-    if (direction != "180" || direction != "270") direction = "90";
-    var rotatedImage = common.rotateImage(originalImage, direction);
+    if (degrees != "180" && degrees != "270") degrees = "90";
+    var rotatedImage;
+    rotatedImage = null;
+    rotatedImage = common.rotateImage(originalImage, degrees);
     note = ff.saveBlob(note, 'imageData', rotatedImage, 'image/png');
     print ("################### rotator note refs " + JSON.stringify(note.ffRefs));
     //note = ff.updateObj(note);

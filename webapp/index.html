@@ -83,11 +83,11 @@
 	  )
     </h4>
     <div class="well">
-	    <button id="extension-flip" class="btn" onclick="FlipMe('h')">Flip Horizontal!</button>
-	    <button id="extension-flip" class="btn" onclick="FlipMe('v')">Flip Vertical!</button>
-	    <button id="extension-flip" class="btn" onclick="RotateMe('90')">Rotate 90 degrees!</button>
-	    <button id="extension-flip" class="btn" onclick="RotateMe('180')">Rotate 180 degrees!</button>
-	    <button id="extension-flip" class="btn" onclick="RotateMe('270')">Rotate 270 degrees!</button>
+	    <button id="extension-flip-h" class="btn" onclick="FlipMe('h')">Flip Horizontal!</button>
+	    <button id="extension-flip-v" class="btn" onclick="FlipMe('v')">Flip Vertical!</button>
+	    <button id="extension-rotate-90" class="btn" onclick="RotateMe('90')">Rotate 90 degrees!</button>
+	    <button id="extension-rotate-180" class="btn" onclick="RotateMe('180')">Rotate 180 degrees!</button>
+	    <button id="extension-rotate-270" class="btn" onclick="RotateMe('270')">Rotate 270 degrees!</button>
 		<output id="extension-image"></output>
     </div>
     <div id = "extension-response"></div>
@@ -228,10 +228,10 @@
   function FlipMe(direction) {
       if(note && note.imageData) {
 	      ff.login("test_user", "T3st_Us3r", function() {
-		  if(direction !== "h" || direction !== "v") direction = "h";
+		  if(direction !== "h" && direction !== "v") direction = "h";
 	      var el = document.getElementById('extension-response');
 	      el.innerHTML = "";
-	      ff.postObjToExtension(note, "/ff/ext/flipper?direction=" + direction, function(resp) {
+	      ff.getObjFromExtension("/ff/ext/flipper?direction=" + direction + "&noteFFUrl=" + note.ffUrl, function(resp) {
   			note = resp;
                var wellWrap = document.createElement("div");
       		 wellWrap.className = "well blue";
@@ -253,15 +253,6 @@
            	 imageDataImg.src = arrayBufferToDataUri(resp.imageData);
                imageDataA.appendChild(imageDataImg); 
                mediaDiv.appendChild(imageDataA);
-               var thumbnailA = document.createElement("a");
-         		 thumbnailA.className = "pull-left";
-         		 thumbnailA.style.clear = 'both';
-               thumbnailA.innerHTML = "thumbnail - resized image";
-               var thumbnailImg = document.createElement("img");
-               thumbnailImg.className = "media-object";
-           	 thumbnailImg.src = arrayBufferToDataUri(resp.thumbnail);
-               thumbnailA.appendChild(thumbnailImg); 
-               mediaDiv.appendChild(thumbnailA);
                var str = js_beautify(JSON.stringify(p), {
                  indent_size: 4,
                  indent_char: '&nbsp;',
@@ -285,9 +276,8 @@
   		ff.login("test_user", "T3st_Us3r", function() {
   			var el = document.getElementById('extension-response');
   			el.innerHTML = "";
-  			if (degrees !== "90" || degrees !== "180" || degrees !== "270") degrees = "90";
-  			ff.postObjToExtension(note, "/ff/ext/rotator?degrees=" + degrees, function(obj) {
-  				ff.getObjFromUri(obj.ffUrl, function(resp) {
+  			if (degrees !== "90" && degrees !== "180" && degrees !== "270") degrees = "90";
+            ff.getObjFromExtension("/ff/ext/rotator?degrees=" + degrees + "&noteFFUrl=" + note.ffUrl, function(resp) {
   					note = resp;
   					var wellWrap = document.createElement("div");
   					wellWrap.className = "well blue";
@@ -309,14 +299,6 @@
   					imageDataImg.src = arrayBufferToDataUri(resp.imageData);
   					imageDataA.appendChild(imageDataImg);
   					mediaDiv.appendChild(imageDataA);
-  					var thumbnailA = document.createElement("a");
-  					thumbnailA.className = "pull-left";
-  					thumbnailA.style.clear = 'both';
-  					thumbnailA.innerHTML = "thumbnail - resized image";
-  					var thumbnailImg = document.createElement("img");
-  					thumbnailImg.className = "media-object";
-  					thumbnailImg.src = arrayBufferToDataUri(resp.thumbnail);
-  					thumbnailA.appendChild(thumbnailImg);
   					mediaDiv.appendChild(thumbnailA);
   					var str = js_beautify(JSON.stringify(p), {
   						indent_size: 4,
@@ -327,10 +309,6 @@
   					mediaBody.appendChild(mediaHeading);
   					var elStr = "Note object was retrieved from the Notes Collection with data: " + str;
   					mediaHeading.innerHTML = "<br><div class = 'well blue'>" + elStr + "</div>";
-  				}, function(code, msg) {
-  					console.error("SaveNote() getObjFromUri Error: " + code + " " + msg);
-  					el.innerHTML = "<div class = 'well red'>Got an error: " + msg + "</div>";
-  				});
   			}, function(code, msg) {
   				console.error("FlipMe() postObjToExtension Error: " + code + " " + msg);
   				el.innerHTML = "<div class = 'well red'>Got an error: " + msg + "</div>";
@@ -381,7 +359,7 @@
 <script type="text/javascript">
    var ff = new FatFractal();
    ff.setAutoLoadBlobs(true);
-   ff.setDebug(true);
+   ff.setDebug(false);
    window.onbeforeunload=cleanup;
    function cleanup(e) {
       var leave_message = 'Thanks for visiting! \nAll test data has been deleted.';
