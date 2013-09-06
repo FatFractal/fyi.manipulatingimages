@@ -177,9 +177,7 @@
       m.subject = elsi.value;
       m.note = elni.value;
       m.imageData = imageData;
-      ff.createObjAtUri(m, "/Notes", function(obj) {
-		//temporary workaround
-		ff.getObjFromUri(obj.ffUrl , function(resp) {
+      ff.createObjAtUri(m, "/Notes", function(resp) {
 			note = resp;
              var wellWrap = document.createElement("div");
     		 wellWrap.className = "well blue";
@@ -207,7 +205,7 @@
              thumbnailA.innerHTML = "thumbnail - resized image";
              var thumbnailImg = document.createElement("img");
              thumbnailImg.className = "media-object";
-         	 thumbnailImg.src = arrayBufferToDataUri(resp.thumbnail);
+         	 if(resp.thumbnail) thumbnailImg.src = arrayBufferToDataUri(resp.thumbnail);
              thumbnailA.appendChild(thumbnailImg); 
              mediaDiv.appendChild(thumbnailA);
              var str = js_beautify(JSON.stringify(p), {
@@ -219,10 +217,6 @@
             mediaBody.appendChild(mediaHeading); 
             var elStr =  "Note object was retrieved from the Notes Collection with data: " + str;
             mediaHeading.innerHTML = "<br><div class = 'well blue'>" + elStr + "</div>";
-        }, function(code, msg) {
-          console.error("SaveNote() getObjFromUri Error: " + code + " " + msg);
-          el.innerHTML = "<div class = 'well red'>Got an error: " + msg + "</div>";
-        });
       }, function(code, msg) {
         console.error("SaveNote() createObjAtUri Error: " + code + " " + msg);
         el.innerHTML = "<div class = 'well red'>Got an error: " + msg + "</div>";
@@ -253,7 +247,7 @@
                var imageDataA = document.createElement("a");
          		 imageDataA.className = "pull-left";
          		 imageDataA.style.clear = 'both';
-               imageDataA.innerHTML = "imageData - original image";
+               imageDataA.innerHTML = "imageData - flipped image";
                var imageDataImg = document.createElement("img");
                imageDataImg.className = "media-object";
            	 imageDataImg.src = arrayBufferToDataUri(resp.imageData);
@@ -309,7 +303,7 @@
   					var imageDataA = document.createElement("a");
   					imageDataA.className = "pull-left";
   					imageDataA.style.clear = 'both';
-  					imageDataA.innerHTML = "imageData - original image";
+  					imageDataA.innerHTML = "imageData - rotated image";
   					var imageDataImg = document.createElement("img");
   					imageDataImg.className = "media-object";
   					imageDataImg.src = arrayBufferToDataUri(resp.imageData);
@@ -367,7 +361,7 @@
 	  if(file.lastModifiedDate) dateStr = file.lastModifiedDate.toLocaleDateString();
 	  var type = "n/a";
 	  if(file.type) typeStr = file.type;
-      var outString = '<strong>' + escape(file.name) + '</strong> (' + typeStr + ') - ' + file.size + ' bytes, last modified: ' + dateStr; 
+      var outString = '<strong>' + escape(file.name) + '</strong> (' + typeStr + ') - ' + file.size + ' bytes, last modified: ' + dateStr + '<br>'; 
       document.getElementById('dropped-image-info').innerHTML = outString;
     } else {
 	  alert("please only image files");
@@ -386,6 +380,8 @@
 </script>
 <script type="text/javascript">
    var ff = new FatFractal();
+   ff.setAutoLoadBlobs(true);
+   ff.setDebug(true);
    window.onbeforeunload=cleanup;
    function cleanup(e) {
       var leave_message = 'Thanks for visiting! \nAll test data has been deleted.';

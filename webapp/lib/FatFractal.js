@@ -113,17 +113,6 @@ function Token(token, secret) {
  */
 function FatFractal() {
     /*
-    This ensures that no errors are thrown with ie if the console is not enabled.
-     */
-    var console = console;
-    if (typeof console == "undefined")
-        console = {};
-    if (typeof console.log == "undefined")
-        console.log = function (/**...*/ args) {};
-    if (typeof console.error == "undefined")
-        console.error = function (/**...*/ args) {};
-
-    /*
     This local variable holds the instance of this function.
      */
     var m_ff = this;
@@ -136,8 +125,14 @@ function FatFractal() {
     if (!window)
         window = {};
 
-    if (! window.console)
-        window.console = { log : function (/**...*/ args) {} };
+    if (!window.console || (typeof window.console === "undefined"))
+        window.console = {};
+
+    if (!window.console.log || (typeof window.console.log === "undefined"))
+        window.console.log = { log : function (/**...*/ args) {} };
+
+    if (!window.console.error || (typeof window.console.error === "undefined"))
+        window.console.error = { error : function (/**...*/ args) {} };
 
     /*
     Prevent errors with Internet Explorer if Array.isArray is not available.
@@ -235,10 +230,18 @@ function FatFractal() {
     var m_scriptAuthRequestTokens = {};
 
     /*
+    Defaults to true.
     When true, then when Object A is loaded, its references are also loaded asynchronously in a separate request.
     <br/> It's usually more desirable to have this property set to false, and use the ?depthRefs query parameter to load references
      */
     var m_autoLoadRefs = true;
+
+    /*
+    Defaults to false.
+    <br> When true, then when Object A is loaded, its BLOBs are also loaded asynchronously in a separate request.
+    <br/> It's usually more desirable to have this property set to false, and fetch the BLOBs directly
+     */
+    var m_autoLoadBlobs = false;
 
     /*
     This local variable (String) contains the version of the FatFractal Javascript Client-Side SDK.
@@ -310,7 +313,7 @@ function FatFractal() {
     };
 
     /**
-    This method will set the AutoRefs mode for the FatFractal library
+    This method will set the AutoLoadRefs mode for the FatFractal library
     @param {Boolean} tf true or false
      */
     this.setAutoLoadRefs = function(tf) {
@@ -319,6 +322,18 @@ function FatFractal() {
            m_autoLoadRefs = true;
        else
            m_autoLoadRefs = false;
+    };
+
+    /**
+    This method will set the AutoLoadBlobs mode for the FatFractal library
+    @param {Boolean} tf true or false
+     */
+    this.setAutoLoadBlobs = function(tf) {
+       //noinspection RedundantIfStatementJS
+        if (tf)
+           m_autoLoadBlobs = true;
+       else
+            m_autoLoadBlobs = false;
     };
 
     /**
@@ -1358,7 +1373,7 @@ function FatFractal() {
                     }
 
                     //noinspection JSUnusedLocalSymbols
-                    uploadNextBlob(response.result, pendingBlobs, function(result) {
+                    uploadNextBlob(obj, pendingBlobs, function(result) {
                         m_loadAllReferences(obj, function() {
                             successCallback(obj, response.statusMessage);
                         });
@@ -1461,7 +1476,8 @@ function FatFractal() {
                        contentType:mimeType,
                        data: blob,
                        success: function(response) {
-                           if (console.log) console.log("FatFractal.updateBlobForObj " + obj.ffUrl + " memberName " + memberName + " : response status " + response.status + ", " + response.responseText);
+                           if(m_debug) console.log("FatFractal.updateBlobForObj " + obj.ffUrl + " memberName " + memberName + " : response status " + response.statusMessage);
+                           m_copyDataToObjFromResponse(obj, response.result);
                            successCallback(obj, response.statusMessage);
                        },
                        error: function(xmlHTTP) {
@@ -1917,29 +1933,34 @@ function FatFractal() {
                         callDone();
                     });
             } else if(refItem.type == "FFB") {
-                if(m_http2) {
-                    // blob and browser can handle blobs
-                    if(m_debug) console.log("Warning: Attempting to load a blob: " + m_stringify(refItem));
-                    var url = m_validUrl(referringObj.ffUrl);
-                    if(m_baseUrl) url = m_baseUrl + url;
-                    var xhr = new XMLHttpRequest();
-                    xhr.open("GET", url + "/" + refItem.name, true);
-                    xhr.responseType = "arraybuffer";
+                if (m_autoLoadBlobs) {
+                    if(m_http2) {
+                        // blob and browser can handle blobs
+                        if(m_debug) console.log("Warning: Attempting to load a blob: " + m_stringify(refItem));
+                        var url = m_validUrl(referringObj.ffUrl);
+                        if(m_baseUrl) url = m_baseUrl + url;
+                        var xhr = new XMLHttpRequest();
+                        xhr.open("GET", url + "/" + refItem.name, true);
+                        xhr.responseType = "arraybuffer";
 
-                    //noinspection JSUnusedLocalSymbols
-                    xhr.onload = function (oEvent) {
-                        var arrayBuffer = xhr.response; // Note: not xhr.responseText
-                        if(m_debug) console.log("FatFractal.m_loadReference: arrayBuffer.byteLength " + arrayBuffer.byteLength);
-                        if(arrayBuffer) {
-                            var byteArray = new Uint8Array(arrayBuffer);
-                            referringObj[refItem.name] = byteArray;
-                            m_cache[refItem.url] = byteArray;
-                        }
+                        //noinspection JSUnusedLocalSymbols
+                        xhr.onload = function (oEvent) {
+                            var arrayBuffer = xhr.response; // Note: not xhr.responseText
+                            if(m_debug) console.log("FatFractal.m_loadReference: arrayBuffer.byteLength " + arrayBuffer.byteLength);
+                            if(arrayBuffer) {
+                                var byteArray = new Uint8Array(arrayBuffer);
+                                referringObj[refItem.name] = byteArray;
+                                m_cache[refItem.url] = byteArray;
+                            }
+                            callDone();
+                        };
+                        xhr.send(null);
+                    } else if(console.error) {
+                        console.error("FatFractal.m_loadReference: browser does not support XMLHttpRequest version 2, cannot load blob as data.");
                         callDone();
-                    };
-                    xhr.send(null);
-                } else if(console.error) {
-                    console.error("FatFractal.m_loadReference: browser does not support XMLHttpRequest version 2, cannot load blob as data.");
+                    }
+                } else {
+                    if(m_debug) console.log("FatFractal.m_loadReference: autoLoadBlobs is false so NOT loading " + m_stringify(refItem));
                     callDone();
                 }
             } else if(console.error) {

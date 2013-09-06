@@ -37,9 +37,10 @@ exports.flipper = function() {
         r.mimeType = "application/json";
         return;
     }
-    if (direction != "h" || direction != "v") direction = "h";
+    if (direction != "v") direction = "h";
     var flippedImage = common.flipImage(originalImage, direction);
     note = ff.saveBlob(note, 'imageData', flippedImage, 'image/png');
+    print ("################### flipper note refs " + JSON.stringify(note.ffRefs));
     //note = ff.updateObj(note);
     r.result = note;
     r.responseCode="200";
@@ -68,9 +69,10 @@ exports.rotator = function() {
         r.mimeType = "application/json";
         return;
     }
-    if (direction != "90" || direction != "180" || direction != "270") direction = "90";
+    if (direction != "180" || direction != "270") direction = "90";
     var rotatedImage = common.rotateImage(originalImage, direction);
     note = ff.saveBlob(note, 'imageData', rotatedImage, 'image/png');
+    print ("################### rotator note refs " + JSON.stringify(note.ffRefs));
     //note = ff.updateObj(note);
     r.result = note;
     r.responseCode="200";
